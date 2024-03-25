@@ -101,10 +101,75 @@ def read_one_dat(path):
   
     return sst
 
+def ar1(x):
+    """
+    Allen and Smith autoregressive lag-1 autocorrelation coefficient.
+    In an AR(1) model
+
+        x(t) - <x> = \gamma(x(t-1) - <x>) + \alpha z(t) ,
+
+    where <x> is the process mean, \gamma and \alpha are process
+    parameters and z(t) is a Gaussian unit-variance white noise.
+
+    Parameters
+    ----------
+    x : numpy.ndarray, list
+        Univariate time series
+
+    Returns
+    -------
+    g : float
+        Estimate of the lag-one autocorrelation.
+    a : float
+        Estimate of the noise variance [var(x) ~= a**2/(1-g**2)]
+    mu2 : float
+        Estimated square on the mean of a finite segment of AR(1)
+        noise, mormalized by the process variance.
+
+    References
+    ----------
+    [1] Allen, M. R. and Smith, L. A. Monte Carlo SSA: detecting
+        irregular oscillations in the presence of colored noise.
+        *Journal of Climate*, **1996**, 9(12), 3373-3404.
+        <http://dx.doi.org/10.1175/1520-0442(1996)009<3373:MCSDIO>2.0.CO;2>
+    [2] http://www.madsci.org/posts/archives/may97/864012045.Eg.r.html
+
+    """
+    x = np.asarray(x)
+    N = x.size
+    xm = x.mean()
+    x = x - xm
+
+    # Estimates the lag zero and one covariance
+    c0 = x.transpose().dot(x) / N
+    c1 = x[0 : N - 1].transpose().dot(x[1:N]) / (N - 1)
+
+    # According to A. Grinsteds' substitutions
+    B = -c1 * N - c0 * N**2 - 2 * c0 + 2 * c1 - c1 * N**2 + c0 * N
+    A = c0 * N**2
+    C = N * (c0 + c1 * N - c1)
+    D = B**2 - 4 * A * C
+
+    if D > 0:
+        g = (-B - D**0.5) / (2 * A)
+    else:
+        raise Warning(
+            "Cannot place an upperbound on the unbiased AR(1). "
+            "Series is too short or trend is to large."
+        )
+
+    # According to Allen & Smith (1996), footnote 4
+    mu2 = -1 / N + (2 / N**2) * (
+        (N - g**N) / (1 - g) - g * (1 - g ** (N - 1)) / (1 - g) ** 2
+    )
+    c0t = c0 / (1 - mu2)
+    a = ((1 - g**2) * c0t) ** 0.5
+
+    return g, a, mu2
 
 #%% Load Files
 
-sst_all, date = read_all_dat(Path.cwd()/'data')
+sst_all, date = read_all_dat(Path.cwd()/'data_test')
 # sst, variance = read_one_dat(path ='C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\iVEX_SHEATH_S_EX_20080825_054301.dat')
 
 #%% # Wavelet Transform
@@ -132,11 +197,20 @@ def process_data(sst):
     
     
     pad = 1
-    dj = 0.125 / 10
-    s0 = dt
+    dj = 0.125 / 10 # Nitidez
+    # dj = 0.125/2 (default matlab)
+    s0 = dt # this says start at a scale of 1/4
+    # s0 = 0.6*dt (default matlab)
     j1 = 5 / dj
-    # lag1 = 0.70 # Lag-1 autocorrelation for red noise (Default)
-    lag1, _, _ = pycwt.ar1(sst)  # Install pycwt to use Allen and Smith autoregressive lag-1 autocorrelation coefficient.
+    try:
+        lag1, _, _ = ar1(sst)  # Install pycwt to use Allen and Smith autoregressive lag-1 autocorrelation coefficient.
+    except:
+        # Look the warning in the ar1
+        lag1 = 0.72 # Lag-1 autocorrelation for red noise (default matlab)
+        print("Cannot place an upperbound on the unbiased AR(1).\n"
+              "Series is too short or trend is to large.\n\n"
+              "Autocorrelation given as lag1 = 0.72"
+        )
     mother = 'MORLET'
     
     # Wavelet transform
@@ -157,7 +231,7 @@ def process_data(sst):
     return sst, time, power, period, sig95, coi, global_ws, global_signif, T
 
 # Select the by data (comment below if using read_one_dat)
-x = date.index('20070210') #select
+x = date.index('20060603') #select a day
 sst = sst_all[x]
 
 sst, time, power, period, sig95, coi, global_ws, global_signif, T = process_data(sst = sst)
