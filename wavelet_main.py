@@ -28,6 +28,8 @@ import sys
 from pathlib import Path
 import re
 import os
+import json
+from io import StringIO
 
 from plot_wavelet import plot_wavelet
 # 
@@ -101,6 +103,25 @@ def read_one_dat(path):
   
     return sst
 
+def read_json_file(file):
+    """Read json that include density and time series period"""
+    
+    date_files, sst, deltatime = [], [], []
+    
+    with open(f"{file}", 'r') as fh:
+        data =  json.load(fh)
+        
+    for key, value in data.items():
+        data = np.loadtxt(StringIO(value[0])) 
+        data = data - np.mean(data)
+        time_temp = value[1]
+    
+        date_files.append(key)
+        sst.append(data)
+        deltatime.append(time_temp)        
+    
+    return sst, date_files, deltatime
+
 def ar1(x):
     """
     Allen and Smith autoregressive lag-1 autocorrelation coefficient.
@@ -169,8 +190,9 @@ def ar1(x):
 
 #%% Load Files
 
-sst_all, date = read_all_dat(Path.cwd()/'data_test')
+# sst_all, date = read_all_dat(Path.cwd()/'data_test')
 # sst, variance = read_one_dat(path ='C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\iVEX_SHEATH_S_EX_20080825_054301.dat')
+sst_all, date, deltatime = read_json_file('density_time_json')
 
 #%% # Wavelet Transform
 
@@ -180,7 +202,7 @@ sst_all, date = read_all_dat(Path.cwd()/'data_test')
 # to compare with plot on Interactive Wavelet page, at
 # "http://paos.colorado.edu/research/wavelets/plot/"
 
-def process_data(sst):
+def process_data(sst, T = None):
     """Process the SST data using wavelet transform.
 
     Args:
@@ -191,8 +213,9 @@ def process_data(sst):
     """
     # Data processing and wavelet transformation
     n = len(sst)
-    dt = (4 / 60)  # in minutes
-    T = n * dt # obtaing the period of time series in minutes
+    dt = 0.25  # in minutes
+    if T == None:
+        T = (n * 4)/60 # obtaing the period of time series in minutes
     time = np.linspace(0, T, n) # timestep of each data point
     
     
@@ -231,10 +254,10 @@ def process_data(sst):
     return sst, time, power, period, sig95, coi, global_ws, global_signif, T
 
 # Select the by data (comment below if using read_one_dat)
-x = date.index('20060603') #select a day
+x = date.index('20070101') #select a day
 sst = sst_all[x]
 
-sst, time, power, period, sig95, coi, global_ws, global_signif, T = process_data(sst = sst)
+sst, time, power, period, sig95, coi, global_ws, global_signif, T = process_data(sst = sst, T = deltatime[x])
 
 #%% Plot the wavelet
 
