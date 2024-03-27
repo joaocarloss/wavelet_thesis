@@ -27,8 +27,9 @@ data_filtered = data[(data['freq(Hz)'] >= 5) & (data['freq(Hz)'] <= max(data['fr
 
 # Plotting the histogram
 def plot_histo(data):
-    bin_width = 2
-    bins = np.arange(5, max(data['freq(Hz)']) + bin_width, bin_width)
+    # bin_width = 2
+    bins = np.arange(5,55,5)
+    # bins = np.arange(5, max(data['freq(Hz)']) + bin_width, bin_width)
     
     # Plotting the histogram
     plt.figure(figsize=(10, 6))
