@@ -213,14 +213,14 @@ def process_data(sst, T = None):
     """
     # Data processing and wavelet transformation
     n = len(sst)
-    dt = 0.25  # in minutes
-    if T == None:
-        T = (n * 4)/60 # obtaing the period of time series in minutes
+    T = (n * 4)/60 # obtaing the period of time series in minutes
     time = np.linspace(0, T, n) # timestep of each data point
-    
+    step = 4  # maximum time resolution of one energy sweep (128 steps) per 4 seconds
+    dt = step/60 # 4s -> 1/15 min (0.066min)
     
     pad = 1
     dj = 0.125 / 10 # Nitidez
+    # dj = 1/12
     # dj = 0.125/2 (default matlab)
     s0 = dt # this says start at a scale of 1/4
     # s0 = 0.6*dt (default matlab)
@@ -254,7 +254,7 @@ def process_data(sst, T = None):
     return sst, time, power, period, sig95, coi, global_ws, global_signif, T
 
 # Select the by data (comment below if using read_one_dat)
-x = date.index('20070101') #select a day
+x = date.index('20071231_2') #select a day
 sst = sst_all[x]
 
 sst, time, power, period, sig95, coi, global_ws, global_signif, T = process_data(sst = sst, T = deltatime[x])
