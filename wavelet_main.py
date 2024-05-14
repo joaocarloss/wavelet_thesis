@@ -19,10 +19,11 @@ Implemented 'while plt.fignum_exists(fig.number)' to plot a sequence
 """
 
 # %% Import libraries
+
 import numpy as np
 import pandas as pd
 from waveletFunctions import wavelet, wave_signif
-import pycwt 
+import pycwt
 import datetime
 import sys
 from pathlib import Path
@@ -32,8 +33,10 @@ import json
 from io import StringIO
 
 from plot_wavelet import plot_wavelet
-# 
-__author__ = 'Evgeniya Predybaylo'
+
+#
+
+__author__ = "Evgeniya Predybaylo"
 
 
 # WAVETEST Example Python script for WAVELET, using NINO3 SST dataset
@@ -44,17 +47,17 @@ __author__ = 'Evgeniya Predybaylo'
 # Modified Oct 1999, changed Global Wavelet Spectrum (GWS) to be sideways,
 #   changed all "log" to "log2", changed logarithmic axis on GWS to
 #   a normal axis.
-    
 
-#%% Load function
+
+# %% Load function
+
 
 def read_all_dat(path):
-    
     """Reads all .dat files from a given directory and normalizes the data.
-    
+
     Created on Fri Feb 16 10:37:38 2024
-    
-    The data files must have 'data' in their name, for example, 'iVEX_SHEATH_S_EX_20080825_054301.dat'. 
+
+    The data files must have 'data' in their name, for example, 'iVEX_SHEATH_S_EX_20080825_054301.dat'.
     The files must also contain a date in the 'YYYYMMDD' format.
 
     Args:
@@ -63,32 +66,33 @@ def read_all_dat(path):
     Returns:
         sst (list): List of .dat files.
         date (list): List of the files' dates.e
-    
+
     """
-   
+
     # path = 'C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\'
-    path_dat_file = Path(path).glob('*.dat')
-    
+
+    path_dat_file = Path(path).glob("*.dat")
+
     date_files, sst = [], []
     for f in path_dat_file:
         # save the date
-        date = (re.findall('\d{8}', f.name)[-1])
+
+        date = re.findall("\d{8}", f.name)[-1]
         if date in date_files:
             date_files.append(date + "_2")
         else:
             date_files.append(date)
-        
         # save the .dat file
+
         dat = np.loadtxt(f)
-        dat = dat - np.mean(dat) # Normalize
+        dat = dat - np.mean(dat)  # Normalize
         sst.append(dat)
-        
     return sst, date_files
 
 
 def read_one_dat(path):
     """Read one .dat file from the specified path.
-    
+
     Created on Fri Feb 16 10:00:38 2024
 
     Args:
@@ -99,28 +103,28 @@ def read_one_dat(path):
         date (str): The file's date.
     """
     sst = np.loadtxt(path)
-    sst = sst - np.mean(sst) # Normalize
-  
+    sst = sst - np.mean(sst)  # Normalize
+
     return sst
+
 
 def read_json_file(file):
     """Read json that include density and time series period"""
-    
+
     date_files, sst, deltatime = [], [], []
-    
-    with open(f"{file}", 'r') as fh:
-        data =  json.load(fh)
-        
+
+    with open(f"{file}", "r") as fh:
+        data = json.load(fh)
     for key, value in data.items():
-        data = np.loadtxt(StringIO(value[0])) 
+        data = np.loadtxt(StringIO(value[0]))
         data = data - np.mean(data)
         time_temp = value[1]
-    
+
         date_files.append(key)
         sst.append(data)
-        deltatime.append(time_temp)        
-    
+        deltatime.append(time_temp)
     return sst, date_files, deltatime
+
 
 def ar1(x):
     """
@@ -162,10 +166,12 @@ def ar1(x):
     x = x - xm
 
     # Estimates the lag zero and one covariance
+
     c0 = x.transpose().dot(x) / N
     c1 = x[0 : N - 1].transpose().dot(x[1:N]) / (N - 1)
 
     # According to A. Grinsteds' substitutions
+
     B = -c1 * N - c0 * N**2 - 2 * c0 + 2 * c1 - c1 * N**2 + c0 * N
     A = c0 * N**2
     C = N * (c0 + c1 * N - c1)
@@ -178,8 +184,8 @@ def ar1(x):
             "Cannot place an upperbound on the unbiased AR(1). "
             "Series is too short or trend is to large."
         )
-
     # According to Allen & Smith (1996), footnote 4
+
     mu2 = -1 / N + (2 / N**2) * (
         (N - g**N) / (1 - g) - g * (1 - g ** (N - 1)) / (1 - g) ** 2
     )
@@ -188,13 +194,16 @@ def ar1(x):
 
     return g, a, mu2
 
-#%% Load Files
 
-# sst_all, date = read_all_dat(Path.cwd()/'data_test')
+# %% Load Files
+
+
+sst_all, date = read_all_dat(Path.cwd() / "data_density")
+# sst_all, date = read_all_dat('C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\')
 # sst, variance = read_one_dat(path ='C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\iVEX_SHEATH_S_EX_20080825_054301.dat')
-sst_all, date, deltatime = read_json_file('density_time_json')
+# sst_all, date, deltatime = read_json_file('density_time_json')
 
-#%% # Wavelet Transform
+# %% # Wavelet Transform
 
 # Integrating the wavelet transform code into the process_data function
 
@@ -202,7 +211,8 @@ sst_all, date, deltatime = read_json_file('density_time_json')
 # to compare with plot on Interactive Wavelet page, at
 # "http://paos.colorado.edu/research/wavelets/plot/"
 
-def process_data(sst, T = None):
+
+def process_data(sst):
     """Process the SST data using wavelet transform.
 
     Args:
@@ -212,60 +222,114 @@ def process_data(sst, T = None):
         tuple: Contains time, period, sig95, coi, global_ws, global_signif, and T.
     """
     # Data processing and wavelet transformation
+
     n = len(sst)
-    T = (n * 4)/60 # obtaing the period of time series in minutes
-    time = np.linspace(0, T, n) # timestep of each data point
+    # T = (n * 4)/60 # obtaing the period of time series in minutes
+
+    T = 14.24
+    time = np.linspace(0, T, n)  # timestep of each data point
     step = 4  # maximum time resolution of one energy sweep (128 steps) per 4 seconds
-    dt = step/60 # 4s -> 1/15 min (0.066min)
-    
+    dt = step / 60  # 4s -> 1/15 min (0.066min)
+
     pad = 1
-    dj = 0.125 / 10 # Nitidez
+    dj = 0.125 / 10  # Nitidez
     # dj = 1/12
     # dj = 0.125/2 (default matlab)
-    s0 = dt # this says start at a scale of 1/4
+
+    s0 = dt  # this says start at a scale of 1/4
     # s0 = 0.6*dt (default matlab)
+
     j1 = 5 / dj
     try:
-        lag1, _, _ = ar1(sst)  # Install pycwt to use Allen and Smith autoregressive lag-1 autocorrelation coefficient.
+        lag1, _, _ = ar1(
+            sst
+        )  # Install pycwt to use Allen and Smith autoregressive lag-1 autocorrelation coefficient.
     except:
         # Look the warning in the ar1
-        lag1 = 0.72 # Lag-1 autocorrelation for red noise (default matlab)
-        print("Cannot place an upperbound on the unbiased AR(1).\n"
-              "Series is too short or trend is to large.\n\n"
-              "Autocorrelation given as lag1 = 0.72"
+
+        lag1 = 0.72  # Lag-1 autocorrelation for red noise (default matlab)
+        print(
+            "Cannot place an upperbound on the unbiased AR(1).\n"
+            "Series is too short or trend is to large.\n\n"
+            "Autocorrelation given as lag1 = 0.72"
         )
-    mother = 'MORLET'
-    
+    mother = "MORLET"
+
     # Wavelet transform
+
     wave, period, scale, coi = wavelet(sst, dt, pad, dj, s0, j1, mother)
     power = (np.abs(wave)) ** 2
-    global_ws = (np.sum(power, axis=1) / n)
+    global_ws = np.sum(power, axis=1) / n
 
     # Significance levels
+
     variance = np.std(sst, ddof=1) ** 2
-    signif = wave_signif(([variance]), dt=dt, sigtest=0, scale=scale, lag1=lag1, mother=mother)
+    signif, fft_theor = wave_signif(
+        ([variance]), dt=dt, sigtest=0, scale=scale, lag1=lag1, mother=mother
+    )
     sig95 = signif[:, np.newaxis].dot(np.ones(n)[np.newaxis, :])
     sig95 = power / sig95
 
     # Global wavelet spectrum & significance levels
-    dof = n - scale
-    global_signif = wave_signif(variance, dt=dt, scale=scale, sigtest=1, lag1=lag1, dof=dof, mother=mother)
 
-    return sst, time, power, period, sig95, coi, global_ws, global_signif, T
+    dof = n - scale
+    global_signif, _ = wave_signif(
+        variance, dt=dt, scale=scale, sigtest=1, lag1=lag1, dof=dof, mother=mother
+    )
+
+    return (
+        sst,
+        time,
+        power,
+        period,
+        variance,
+        sig95,
+        coi,
+        global_ws,
+        fft_theor,
+        global_signif,
+        T,
+    )
+
 
 # Select the by data (comment below if using read_one_dat)
-x = date.index('20071231_2') #select a day
+# x = date.index('20071216_2') #select a day
+
+x = date.index("20071227_2")  # select a day
 sst = sst_all[x]
 
-sst, time, power, period, sig95, coi, global_ws, global_signif, T = process_data(sst = sst, T = deltatime[x])
+(
+    sst,
+    time,
+    power,
+    period,
+    variance,
+    sig95,
+    coi,
+    global_ws,
+    fft_theor,
+    global_signif,
+    T,
+) = process_data(sst=sst)
 
-#%% Plot the wavelet
+# %% Plot the wavelet
 
-save_freq = Path.cwd() /'saves'
 
-selected_freq = plot_wavelet(sst = sst, time = time, 
-                             power = power, period = period, 
-                             sig95 = sig95, coi = coi, 
-                             global_ws = global_ws,global_signif = global_signif, 
-                             T = T, date = date[x], 
-                             enable_click=True, output_save = save_freq)
+save = Path.cwd()
+
+selected_freq = plot_wavelet(
+    sst=sst,
+    time=time,
+    power=power,
+    period=period,
+    variance=variance,
+    sig95=sig95,
+    coi=coi,
+    fft_theor=fft_theor,
+    global_ws=global_ws,
+    global_signif=global_signif,
+    T=T,
+    date=date[x],
+    enable_click=True,
+    output_save=save,
+)

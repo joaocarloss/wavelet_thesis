@@ -1,0 +1,7 @@
+*.pyc
+__pycache__/
+question.txt
+envios/
+wavelet_matlab.py
+data_test/
+saves/

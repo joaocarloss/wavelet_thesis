@@ -396,7 +396,7 @@ def wave_signif(Y, dt, scale, sigtest=0, lag1=0.0, siglvl=0.95,
     else:
         print('ERROR: sigtest must be either 0, 1, or 2')
 
-    return signif
+    return signif, fft_theor
 
 
 # --------------------------------------------------------------------------
