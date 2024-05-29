@@ -7,13 +7,18 @@ This repository is dedicated to storing the catalog list of VEX and the Morlet w
 ## Problem Statement
 ULF waves are considered as an essential factor in the magnetospheric physics. Those waves carry information about instabilities, free energy configuration contained in the plasma or in the obstacles to the flow. Thus, the project addresses the challenge of identifying the main ULF waves in Venus magnetosheath from datasets provided.
 
-## Prerequisites
-- Python version 3.x or higher.
+### Requirements
 
-## Installation and Setup
-No specific installation process is required. The project runs directly from the source files. To get started, open the main file (`wavelet_main.py`) and run the code.
+ Install `requirements.txt`
 
-## Usage
+- Python (>= 3.x)
+- Pandas, for data manipulation  
+- NumPy, for all numerical algorithms
+- Matplotlib, for static plotting and visualizations
+- Scipy, for scientific computing 
+
+## How do I use?
+
 Run the `wavelet_main.py` script to initiate the analysis. This script integrates all the functionalities needed for the wavelet analysis.
 
 ## Features
@@ -34,4 +39,3 @@ Data files within the `data_density` folder must adhere to the following format:
 - No header.
 - No index.
 
-## Contributing
