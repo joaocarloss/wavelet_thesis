@@ -187,6 +187,7 @@ def ar1(x):
 
 
 density_all, date = read_all_dat(Path.cwd().parent / "data"/ "data_density")
+# density_all, date = read_all_dat(r'C:\Pesquisa\wavelet_thesis\data\data_density')
 # density_all, date = read_all_dat('C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\')
 # density, variance = read_one_dat(path ='C:\\Pesquisa\\project_wavelet_2024_master\\magnetoshealt\\iVEX_SHEATH_S_EX_20080825_054301.dat')
 # density_all, date, deltatime = read_json_file('density_time_json')
@@ -301,6 +302,8 @@ density = density_all[x]
 ) = process_data(density=density)
 
 # %% Plot the wavelet
+
+# plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, fft_theor, global_signif, T, date, enable_click, output_save = Path.cwd())
 
 
 save = Path.cwd()

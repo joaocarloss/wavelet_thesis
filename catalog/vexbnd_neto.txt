@@ -1,7 +1,7 @@
 # CCATi boundary location file: time bndnum yvalue zvalue		
 # bndnum: inbound bowshock (1), MPB (2), PEB(3), outbound PEB(4), MPB (5), bowshock (6)
 # yvalue,zvalue: electron  energy and flux peak at boundary
-# crossings from 2011 to 20147 (end) by Neto.
+# crossings from 2011 to 2014 (end) by Neto.
 2011-01-01/01:00:58       1      17795.2      5.00000
 2011-01-01/01:51:01       2      11246.7      6.00000
 2011-01-01/02:11:04       3      2012.30      6.00000

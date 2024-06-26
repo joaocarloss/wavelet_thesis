@@ -35,7 +35,7 @@ from matplotlib.widgets import Cursor
 
 #%%
 
-def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, fft_theor, global_signif, T, date, enable_click, output_save = Path.cwd()):
+def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, fft_theor, global_signif, T, date, enable_click, output_save = None):
     """Plot a wavelet transform visualization.
 
     Args:
@@ -58,6 +58,8 @@ def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, 
     plt.style.use('seaborn-v0_8-paper')
     
     xlim = ([0, T])
+    
+    font_size = 13
     
     # --- Config the date
     # Check if the date ends with '_2' and remove it if it does
@@ -82,12 +84,12 @@ def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, 
     plt.subplot(gs[0, 0:3])
     plt.plot(time, density, color='k', lw = 1)
     plt.xlim(xlim[:])
-    plt.xlabel('Time (min)',  fontsize = 12)
-    plt.ylabel('cm$^3$',  fontsize = 12)
-    plt.title('a) Electron Density', fontsize = 12)
+    plt.xlabel('Time (min)',  fontsize = font_size)
+    plt.ylabel('cm$^3$',  fontsize = font_size)
+    plt.title('a) Electron Density', fontsize = font_size)
     ax = plt.gca()
-    ax.xaxis.set_tick_params(labelsize=9)
-    ax.yaxis.set_tick_params(labelsize=9)
+    ax.xaxis.set_tick_params(labelsize=font_size)
+    ax.yaxis.set_tick_params(labelsize=font_size)
     plt.grid()
 
     # --- Plot wavelet spectrum (WT)
@@ -96,15 +98,19 @@ def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, 
     CS = plt.contourf(time, period, power, len(levels), cmap = 'jet') # default
 
     # plt.pcolormesh(time, period, power, cmap='jet', rasterized=True)
-    plt.xlabel('Time (min)',  fontsize = 12)
-    plt.ylabel('Period (min)',  fontsize = 12)
-    plt.title(f'b) Wavelet Power Spectrum, {date_ext}', fontsize = 12)
+    plt.xlabel('Time (min)',  fontsize = font_size)
+    plt.ylabel('Period (mHz)',  fontsize = font_size)
+    plt.title(f'b) Wavelet Power Spectrum, {date_ext}', fontsize = font_size)
     plt.xlim(xlim[:])
     # 95# significance contour, levels at -99 (fake) and 1 (95# signif)
     # plt.contour(time, period, sig95, [-99, 1], colors='k', linewidths = 2) # line spectrum
     # cone-of-influence, anything "below" is dubious
     plt.fill_between(time, coi * 0 + period[-1], coi, facecolor="none", edgecolor="#00000040", hatch='x')
     plt.plot(time, coi, 'k', lw = 1)
+    ax.xaxis.set_tick_params(labelsize=font_size)
+    ax.yaxis.set_tick_params(labelsize=font_size)
+    plt.yticks(fontsize=font_size)
+    plt.xticks(fontsize=font_size)
     
     # format y-scale
     # Convert period ticks to mHz
@@ -115,11 +121,13 @@ def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, 
     plt.ylim([np.min(period), np.max(period)])
     ax = plt.gca()
     ax.yaxis.set_major_formatter(ticker.ScalarFormatter())
-    ax.xaxis.set_tick_params(labelsize=9)
-    ax.yaxis.set_tick_params(labelsize=9)
+    ax.xaxis.set_tick_params(labelsize=font_size)
+    ax.yaxis.set_tick_params(labelsize=font_size)
     plt3.ticklabel_format(axis='y', style='plain')
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(period_to_mhz))
     plt3.invert_yaxis()
+    plt.yticks(fontsize=font_size)
+    plt.xticks(fontsize=font_size)
     # plt.grid()
 
      # --- Plot global wavelet spectrum (GWS)
@@ -144,19 +152,21 @@ def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, 
     minor_ticks = 2**(major_ticks + 0.4)
     ax.yaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
     ax.yaxis.set_minor_formatter(ticker.FuncFormatter(lambda x, pos: ''))
-    ax.xaxis.set_tick_params(labelsize=9)
-    ax.yaxis.set_tick_params(labelsize=9)
+    # ax.xaxis.set_tick_params(labelsize=font_size)
+    # ax.yaxis.set_tick_params(labelsize=font_size)
     plt4.ticklabel_format(axis='y', style='plain')
+    plt.yticks(fontsize=font_size)
+    plt.xticks(fontsize=font_size)
     
     # write annnote
     # ax.plot(39500, 11, 'o', color = 'black')
     ax.annotate('$27.2$ mHz', xy=(4.5, 0.62), xytext = (4.5, 0.25),
-                  ha='center', va='center', fontsize = 12, 
+                  ha='center', va='center', fontsize = 13, 
                   arrowprops=dict(arrowstyle= '->', lw=1.35, facecolor='k'),
                   bbox=dict(fc="white", ec="none", pad=0.2))
 
     ax.annotate('$12.4$ mHz', xy=(15.5, 1.34), xytext = (15.5, 0.4),
-                  ha='center', va='center', fontsize = 12, 
+                  ha='center', va='center', fontsize = 13, 
                   arrowprops=dict(arrowstyle= '->', lw=1.35, facecolor='k'),
                   bbox=dict(fc="white", ec="none", pad=0.2))
     
@@ -191,7 +201,8 @@ def plot_wavelet(density, time, power, period, variance, sig95, coi, global_ws, 
 
     plt.tight_layout()
     plt.show()
-    save_fig = output_save /'wavelet_plot'
-    plt.savefig(f"{save_fig}\{date}.pdf", dpi =300)
+    if output_save:
+        save_fig = output_save /'wavelet_plot'
+        plt.savefig(f"{save_fig}\{date}.pdf", dpi =300)
 
     return selected_points
